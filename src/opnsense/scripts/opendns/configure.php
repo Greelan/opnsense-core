@@ -72,11 +72,10 @@ $v4_server = ['208.67.222.222', '208.67.220.220'];
 $v6_server = ['2620:119:35::35', '2620:119:53::53'];
 $opendns_servers = array_merge($v4_server, $v6_server);
 
-if ($standalone) {
-    /* standalone mode: do not alter DNS server settings */
-} elseif ($enabled) {
-    /* refresh the backup only when the live DNS isn't the OpenDNS set, so we
-     * never record OpenDNS servers (or their override) as the user's own */
+if ($enabled && !$standalone) {
+    /* OpenDNS is managing the system DNS; refresh the backup only when the live
+     * DNS isn't the OpenDNS set, so we never record OpenDNS servers (or their
+     * override) as the user's own */
     $user_servers = [];
     $has_any = false;
     $has_user_servers = false;
@@ -112,7 +111,8 @@ if ($standalone) {
     }
     $system->dnsallowoverride = '0';
 } else {
-    /* disabled */
+    /* not managing (disabled, or enabled in standalone mode): restore the
+     * user's DNS if we captured a backup */
     if ($has_backup) {
         /* restore the captured DNS settings verbatim and clear the backup */
         $servers = array_values(array_filter(explode(',', (string)$mdl->backup->dnsservers)));
