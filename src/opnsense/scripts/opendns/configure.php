@@ -128,7 +128,7 @@ if ($enabled && !$standalone) {
         }
         $system->dnsallowoverride = $allowoverride;
     } else {
-        /* no backup: strip leftover OpenDNS servers (migrated box), leave
+        /* no backup: strip leftover OpenDNS servers, leave
          * everything else untouched */
         $servers = [];
         $removed = false;
