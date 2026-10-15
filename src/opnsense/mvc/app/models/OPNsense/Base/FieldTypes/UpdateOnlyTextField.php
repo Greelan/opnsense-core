@@ -30,10 +30,16 @@ namespace OPNsense\Base\FieldTypes;
 
 /**
  * Class update only TextField (can be practical for password type fields)
+ * A saved value is described as stars only, an empty value keeps it, CLEAR empties it.
  * @package OPNsense\Base\FieldTypes
  */
 class UpdateOnlyTextField extends TextField
 {
+    /**
+     * value to empty the field, nobody can type it
+     */
+    public const CLEAR = "\0";
+
     /**
      * Always return blank
      * @return string
@@ -44,12 +50,23 @@ class UpdateOnlyTextField extends TextField
     }
 
     /**
-     * update field (if not empty)
+     * fixed stars when a value is saved, so forms can show one is set
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->internalValue != "" ? "********" : "";
+    }
+
+    /**
+     * update field (if not empty), CLEAR empties it
      * @param string $value
      */
     public function setValue($value)
     {
-        if ($value != "") {
+        if ($value === self::CLEAR) {
+            parent::setValue("");
+        } elseif ($value != "") {
             parent::setValue($value);
         }
     }

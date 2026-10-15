@@ -38,6 +38,7 @@ require_once("rrd.inc");
 require_once("system.inc");
 
 use OPNsense\Backup\Local;
+use OPNsense\Base\FieldTypes\UpdateOnlyTextField;
 
 /**
  * restore config section
@@ -640,7 +641,16 @@ $( document ).ready(function() {
 <?php elseif ($field['type'] == 'file'): ?>
                         <input name="<?=$fieldId;?>" type="file">
 <?php elseif ($field['type'] == 'password'):?>
-                        <input name="<?=$fieldId;?>" type="password" autocomplete="new-password" value="<?=$pconfig[$fieldId];?>" />
+                        <input name="<?=$fieldId;?>" id="<?=$fieldId;?>" type="password" autocomplete="new-password"
+                               value="<?=$pconfig[$fieldId] !== UpdateOnlyTextField::CLEAR ? $pconfig[$fieldId] : '';?>"
+                               <?=!empty($field['placeholder']) ? 'placeholder="' . html_safe($field['placeholder']) . '"' : '';?>/>
+<?php if (!empty($field['allowclear'])): ?>
+                        <div id="clear-value_<?=$fieldId;?>"<?=empty($field['placeholder']) ? ' style="display: none;"' : '';?>>
+                          <a href="#" class="text-danger" data-cancel-text="<?= html_safe(gettext('Cancel')) ?>">
+                            <i class="fa fa-times-circle"></i> <small><?= gettext('Clear') ?></small>
+                          </a>
+                        </div>
+<?php endif ?>
 <?php elseif ($field['type'] == 'textarea'): ?>
                         <textarea name="<?=$fieldId;?>" rows="10"><?=$pconfig[$fieldId];?></textarea>
 <?php elseif ($field['type'] == 'passwordarea'): ?>

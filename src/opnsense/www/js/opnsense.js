@@ -115,6 +115,9 @@ function getFormData(parent) {
                     // strip leading '#' for backend compatibility
                     const val = sourceNode.val();
                     node[keypart] = val.startsWith("#") ? val.substring(1) : val;
+                } else if (sourceNode.data('clear-value') && sourceNode.val() === '') {
+                    // saved write-only value marked for clearing (UpdateOnlyTextField::CLEAR)
+                    node[keypart] = "\0";
                 } else {
                     node[keypart] = sourceNode.val();
                 }
@@ -255,14 +258,92 @@ function setFormData(parent,data) {
                     } else if (targetNode.attr('type') !== 'file') {
                         // regular input type
                         targetNode.val(htmlDecode(node[keypart]));
+                        if (targetNode.attr('type') === 'password') {
+                            // drop the saved state of previous data, e.g. in a reused dialog
+                            forgetClearValue(targetNode);
+                        }
                         if (node['%' + keypart] !== undefined) {
                             targetNode.attr('placeholder', htmlDecode(node['%' + keypart]));
+                            if (targetNode.attr('type') === 'password') {
+                                showSavedValue(targetNode, targetNode.attr('placeholder'));
+                            }
                         }
                     }
                     targetNode.change();
                 }
             }
         });
+    });
+}
+
+/**
+ * show a saved write-only value: its placeholder, and the link to clear it where the form allows
+ * @param input password input
+ * @param placeholder what UpdateOnlyTextField::getDescription() returns for a saved value
+ */
+function showSavedValue(input, placeholder) {
+    input.attr('placeholder', placeholder).data('saved-placeholder', placeholder);
+    $('[id="clear-value_' + input.attr('id') + '"]').show();
+}
+
+/**
+ * mark a saved write-only value for clearing or keep it, see setFormData() and getFormData()
+ * @param input password input
+ * @param clear clear on save
+ */
+function setClearValue(input, clear) {
+    const link = $('[id="clear-value_' + input.attr('id') + '"]').children('a');
+    input.data('clear-value', clear);
+    if (clear) {
+        input.val('').removeAttr('placeholder');
+    } else if (input.data('saved-placeholder') !== undefined) {
+        input.attr('placeholder', input.data('saved-placeholder'));
+    }
+    if (link.data('clear-text') === undefined) {
+        link.data('clear-text', link.find('small').text());
+    }
+    link.find('small').text(clear ? link.data('cancel-text') : link.data('clear-text'));
+}
+
+/**
+ * forget a saved write-only value: not marked, no placeholder from data, no link
+ * @param input password input
+ */
+function forgetClearValue(input) {
+    setClearValue(input, false);
+    if (input.data('saved-placeholder') !== undefined) {
+        input.removeAttr('placeholder').removeData('saved-placeholder');
+    }
+    $('[id="clear-value_' + input.attr('id') + '"]').hide();
+}
+
+/**
+ * clear a saved write-only value (password fields with allowclear), Cancel or typing keeps it.
+ * MVC forms get the saved state from setFormData(), legacy pages render it (placeholder, link shown).
+ */
+function addPasswordClearUI() {
+    $('[id^="clear-value_"]').each(function () {
+        const input = $('input[id="' + $(this).attr('id').replace(/^clear-value_/, '') + '"]');
+        if ($(this).css('display') !== 'none' && input.attr('placeholder') !== undefined) {
+            input.data('saved-placeholder', input.attr('placeholder'));
+        }
+        $(this).children('a').click(function (e) {
+            e.preventDefault();
+            setClearValue(input, !input.data('clear-value'));
+        });
+        input.on('input', function () {
+            if (input.data('clear-value') && input.val() !== '') {
+                setClearValue(input, false);
+            }
+        });
+        if (input.attr('name') !== undefined && input.prop('form')) {
+            // legacy form post, send what getFormData() sends (UpdateOnlyTextField::CLEAR)
+            input.prop('form').addEventListener('formdata', function (e) {
+                if (input.data('clear-value') && input.val() === '') {
+                    e.formData.set(input.attr('name'), "\0");
+                }
+            });
+        }
     });
 }
 

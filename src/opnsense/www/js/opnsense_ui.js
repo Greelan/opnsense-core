@@ -107,9 +107,20 @@ function saveFormToEndpoint(url, formid, callback_ok, disable_dialog, callback_f
                     // execute callback function
                     callback_fail(data);
                 }
-            } else if ( callback_ok !== undefined ) {
-                // execute callback function
-                callback_ok(data);
+            } else {
+                $("#" + formid + " input[type='password']").each(function () {
+                    if ($(this).data('clear-value')) {
+                        // cleared write-only values are gone now
+                        forgetClearValue($(this));
+                    } else if ($(this).val() !== '' && $('[id="clear-value_' + $(this).attr('id') + '"]').length) {
+                        // a new one is saved, show it as UpdateOnlyTextField::getDescription() does
+                        showSavedValue($(this).val(''), '********');
+                    }
+                });
+                if ( callback_ok !== undefined ) {
+                    // execute callback function
+                    callback_ok(data);
+                }
             }
         } else if ( callback_fail !== undefined ) {
             callback_fail(data);

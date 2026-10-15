@@ -51,6 +51,7 @@
  # style       :   css class to add
  # width       :   width in pixels if applicable
  # allownew    :   allow new items (for list) if applicable
+ # allowclear  :   offer to clear a saved write-only value (password type)
  # readonly    :   if true, input fields will be readonly
  # type_formatter : when set add type_formatter="" attribute which is used in getFormData() to pipe data before returning
  # parent      :   ID reference for the parent form
@@ -144,6 +145,11 @@
             </div>
         {% elseif type == "password" %}
             <input type="password" autocomplete="new-password" class="form-control {{style|default('')}}" size="{{size|default("50")}}" id="{{ id }}" {{ readonly|default(false) ? 'readonly="readonly"' : '' }} aria-label="{{label|safe}}">
+            {% if allowclear|default(false)=='true' %}
+                <div id="clear-value_{{ id }}" style="display: none;">
+                    <a href="#" class="text-danger" data-cancel-text="{{ lang._('Cancel') }}"><i class="fa fa-times-circle"></i> <small>{{ lang._('Clear') }}</small></a>
+                </div>
+            {% endif %}
         {% elseif type == "textbox" %}
             <textarea class="{{style|default('')}}" rows="{{height|default("5")}}" id="{{ id }}" {{ readonly|default(false) ? 'readonly="readonly"' : '' }} aria-label="{{label|safe}}" {% if type_formatter is defined %}type_formatter="{{type_formatter}}"{% endif %} ></textarea>
         {% elseif type in ["info", "info_link"] %}

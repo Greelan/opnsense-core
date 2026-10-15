@@ -61,4 +61,45 @@ class UpdateOnlyTextFieldTest extends Field_Framework_TestCase
         $field->setValue('nottheregex');
         $this->assertContains('Regex', $this->validate($field));
     }
+
+    /**
+     * a saved value is only announced, never shown
+     */
+    public function testDescriptionShowsStarsOnlyWhenSet()
+    {
+        $field = new UpdateOnlyTextField();
+        $this->assertEquals('', $field->getDescription());
+        $field->setValue('secret');
+        $this->assertEquals('********', $field->getDescription());
+        $this->assertEquals('', (string)$field);
+    }
+
+    /**
+     * the clear value empties the field, an empty value keeps it
+     */
+    public function testClearEmptiesAndCountsAsChange()
+    {
+        $field = new UpdateOnlyTextField();
+        $field->setValue('secret');
+        $field->setValue('');
+        $this->assertEquals('secret', $field->getValue());
+        $field->setValue(UpdateOnlyTextField::CLEAR);
+        $this->assertEquals('', $field->getValue());
+        $this->assertTrue($field->isFieldChanged());
+        $this->assertEquals('', $field->getDescription());
+    }
+
+    /**
+     * clearing a required field fails validation
+     */
+    public function testClearOnRequiredFails()
+    {
+        $this->expectException(\OPNsense\Base\ValidationException::class);
+        $this->expectExceptionMessage("PresenceOf");
+        $field = new UpdateOnlyTextField();
+        $field->setRequired("Y");
+        $field->setValue('secret');
+        $field->setValue(UpdateOnlyTextField::CLEAR);
+        $this->validateThrow($field);
+    }
 }
