@@ -416,6 +416,60 @@ function addMultiSelectClearUI() {
     });
 }
 
+/**
+ * an eye inside each password field to show or hide what is typed. It is only there for text typed
+ * into the field, so it is never taken for a way to see a saved value; a value set by code, as
+ * setFormData() does, hides it and masks the field again.
+ */
+function addPasswordShowUI() {
+    $('input[type="password"]').each(function () {
+        const input = $(this);
+        if (input.parent().hasClass('has-feedback')) {
+            return;
+        }
+        // the themes place the icon for a label above the field
+        const eye = $('<span class="form-control-feedback text-muted hidden"><i class="fa fa-eye"></i></span>')
+            .attr('title', addPasswordShowUI.defaults.title)
+            .css({top: 0, bottom: 0, height: 'auto', display: 'flex', 'align-items': 'center', 'justify-content': 'center', cursor: 'pointer'});
+        input.wrap($('<div class="has-feedback">')).after(eye);
+        if (!input.hasClass('form-control')) {
+            // the themes only pad a form-control for the icon, legacy fields have none
+            input.css('padding-right', '40px');
+        }
+        let typed = '';
+        const update = function () {
+            if (typed === '') {
+                input.attr('type', 'password');
+                eye.find('i').addClass('fa-eye').removeClass('fa-eye-slash');
+            }
+            // the themes cap the field, the eye goes at its end
+            eye.parent().css('max-width', input.css('max-width'));
+            eye.toggleClass('hidden', typed === '');
+        };
+        input.on('input', function () {
+            typed = input.val();
+            update();
+        }).on('change', function () {
+            if (input.val() !== typed) {
+                typed = '';
+            }
+            update();
+        });
+        // keep the caret in the field
+        eye.on('mousedown', function (e) {
+            e.preventDefault();
+        }).click(function () {
+            const hidden = input.attr('type') === 'password';
+            input.attr('type', hidden ? 'text' : 'password');
+            eye.find('i').toggleClass('fa-eye', !hidden).toggleClass('fa-eye-slash', hidden);
+        });
+    });
+}
+
+addPasswordShowUI.defaults = {
+    'title': 'Show or hide'
+};
+
 
 /**
  * setup form help buttons

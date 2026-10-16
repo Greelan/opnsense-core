@@ -119,6 +119,7 @@
                 initFormAdvancedUI();
                 initFormSearchUI();
                 addMultiSelectClearUI();
+                addPasswordShowUI();
                 initGlobalOpenShortcuts();
 
                 updateSystemStatus();
@@ -361,6 +362,8 @@
 
         $.fn.selectpicker.defaults = $.fn.selectpicker.defaults || {};
         $.extend($.fn.selectpicker.defaults, {noneSelectedText: '{{ lang._('Nothing selected') }}'});
+
+        addPasswordShowUI.defaults.title = "{{ lang._('Show or hide') }}";
     </script>
 
   </body>

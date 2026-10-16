@@ -108,6 +108,7 @@ $pagetitle .= html_safe(sprintf(' | %s.%s', $config['system']['hostname'], $conf
 
     <!-- opnsense non legacy helper functions -->
     <script src="<?= cache_safe("/ui/js/opnsense.js") ?>"></script>
+    <script src="<?= cache_safe("/ui/js/opnsense_ui.js") ?>"></script>
 
     <!-- opnsense non legacy theme support functions -->
     <script src="<?= cache_safe("/ui/js/opnsense_theme.js") ?>"></script>
@@ -126,6 +127,8 @@ $pagetitle .= html_safe(sprintf(' | %s.%s', $config['system']['hostname'], $conf
     $( document ).ready(function() {
       $('[data-toggle="tooltip"]').tooltip();
       $("input").not("[autocomplete]").attr("autocomplete","off");
+      addPasswordShowUI.defaults.title = '<?= html_safe(gettext('Show or hide')) ?>';
+      addPasswordShowUI();
 
       // hide empty menu items
       $('#mainmenu > div > .collapse').not('#Favorites').each(function(){
