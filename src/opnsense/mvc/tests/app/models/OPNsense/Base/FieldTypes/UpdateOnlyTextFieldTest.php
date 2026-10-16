@@ -61,4 +61,16 @@ class UpdateOnlyTextFieldTest extends Field_Framework_TestCase
         $field->setValue('nottheregex');
         $this->assertContains('Regex', $this->validate($field));
     }
+
+    /**
+     * a saved value is only announced, never shown
+     */
+    public function testDescriptionShowsStarsOnlyWhenSet()
+    {
+        $field = new UpdateOnlyTextField();
+        $this->assertEquals('', $field->getDescription());
+        $field->setValue('secret');
+        $this->assertEquals('********', $field->getDescription());
+        $this->assertEquals('', (string)$field);
+    }
 }
