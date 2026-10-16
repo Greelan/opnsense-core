@@ -416,6 +416,161 @@ function addMultiSelectClearUI() {
     });
 }
 
+/**
+ * an eye inside each password field to show or hide what the user typed into it. Text only counts as
+ * typed when the user started from an empty field or replaced all of it, so the eye is never a way to
+ * see a saved value; a value set by code, as setFormData() does, an undo, an autofill or a form reset
+ * hides it and masks the field again. Pass a container to cover fields added later.
+ */
+function addPasswordShowUI(target) {
+    if (!addPasswordShowUI.ready) {
+        // Edge brings an eye of its own
+        $('<style>input::-ms-reveal { display: none; }</style>').appendTo('head');
+        if (document.fonts !== undefined) {
+            // the theme's font, loaded once a field shows, changes what a field sized by its content needs
+            document.fonts.addEventListener('loadingdone', function () {
+                $('input').each(function () {
+                    const fit = $(this).data('password-show');
+                    if (typeof fit === 'function') {
+                        fit();
+                    }
+                });
+            });
+        }
+        addPasswordShowUI.ready = true;
+    }
+    const native = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    const title = htmlDecode(addPasswordShowUI.defaults.title);
+    $(target || document).find('input[type="password"]').each(function () {
+        const field = this;
+        const input = $(field);
+        // an input-group has buttons of its own
+        if (input.data('password-show') || input.parent().hasClass('input-group')) {
+            return;
+        }
+        // a shown password is still a password to the browser and the keyboard
+        input.attr({spellcheck: 'false', autocapitalize: 'off', autocorrect: 'off'});
+        const eye = $('<button type="button" class="text-muted hidden"><i class="fa fa-eye" aria-hidden="true"></i></button>')
+            .attr({title: title, 'aria-label': title, 'aria-pressed': 'false', 'aria-controls': field.id || null})
+            .css({position: 'absolute', 'z-index': 2, width: '32px', padding: 0, border: 0, background: 'none',
+                  display: 'flex', 'align-items': 'center', 'justify-content': 'center', cursor: 'pointer'});
+        input.wrap($('<div style="position: relative;">')).after(eye);
+        const wrapper = field.parentNode;
+        const own = {'padding-right': field.style.paddingRight, 'margin-right': field.style.marginRight,
+                     'max-width': field.style.maxWidth};
+        // the padding keeps typed text and a password manager's icon clear of the eye, the field keeps
+        // the width it has without it, also in a table sized by its content or where it follows its content
+        const fit = function () {
+            input.css(own);
+            wrapper.style.maxWidth = '';
+            if (field.offsetWidth === 0 || field.parentNode !== wrapper) {
+                return;
+            }
+            const style = getComputedStyle(field);
+            const before = field.getBoundingClientRect().width;
+            const space = wrapper.getBoundingClientRect().width;
+            const cap = style.maxWidth.endsWith('px') ? parseFloat(style.maxWidth) : 0;
+            const room = 40 - parseFloat(style.paddingRight);
+            // the margin gives the room back, the cap moves to the wrapper so the field may take it
+            input.css({'padding-right': '40px', 'margin-right': parseFloat(style.marginRight) - room + 'px'});
+            if (cap > 0 && Math.abs(before - Math.min(space, cap)) < 0.5) {
+                input.css('max-width', cap + room + 'px');
+                wrapper.style.maxWidth = cap + 'px';
+            }
+            if (Math.abs(field.getBoundingClientRect().width - before) > 0.5) {
+                // sized by its content, as on a form-inline page
+                input.css({'margin-right': own['margin-right'], 'max-width': before + 'px'});
+                wrapper.style.maxWidth = '';
+            }
+        };
+        input.data('password-show', fit);
+        fit();
+        let typed = '';
+        let editing = false;
+        const update = function () {
+            eye.addClass('hidden');
+            if (field.parentNode !== wrapper) {
+                // moved into an input-group by its page, whose buttons decide what shows
+                input.css(own);
+                wrapper.style.maxWidth = '';
+                return;
+            }
+            if (typed === '' && field.type !== 'password') {
+                input.attr('type', 'password');
+            }
+            const masked = field.type === 'password';
+            eye.attr('aria-pressed', String(!masked));
+            eye.find('i').toggleClass('fa-eye', masked).toggleClass('fa-eye-slash', !masked);
+            if (typed === '' || field.offsetWidth === 0) {
+                return;
+            }
+            // the field may be wider than its cell, the eye goes at its end
+            const box = field.getBoundingClientRect();
+            const origin = wrapper.getBoundingClientRect();
+            eye.css({left: box.right - 32 - origin.left, top: box.top - origin.top, height: box.height});
+            eye.removeClass('hidden');
+        };
+        const mask = function () {
+            input.attr('type', 'password');
+            update();
+        };
+        // whatever code puts in the field is not typed text
+        Object.defineProperty(field, 'value', {
+            configurable: true,
+            get: function () {
+                return native.get.call(field);
+            },
+            set: function (value) {
+                native.set.call(field, value);
+                typed = '';
+                editing = false;
+                update();
+            }
+        });
+        input.on('beforeinput', function (e) {
+            const type = e.originalEvent.inputType || '';
+            editing = !type.startsWith('history') && type !== 'insertReplacementText' && (field.value === typed ||
+                (field.selectionStart === 0 && field.selectionEnd === field.value.length));
+            // its input follows in the same task, if the edit changes anything at all
+            setTimeout(function () {
+                editing = false;
+            });
+        }).on('input', function (e) {
+            // an autofill or an event raised by code comes without a beforeinput
+            typed = editing && e.originalEvent !== undefined && e.originalEvent.isTrusted ? field.value : '';
+            editing = false;
+            update();
+        });
+        $(field.form).on('reset', function () {
+            typed = '';
+            update();
+        }).on('submit', mask);
+        if (window.ResizeObserver !== undefined) {
+            // hidden, shown or resized by its page or the window, watched from outside what fit() changes
+            new ResizeObserver(function () {
+                fit();
+                update();
+            }).observe(wrapper.parentNode || wrapper);
+            new ResizeObserver(update).observe(field, {box: 'border-box'});
+        }
+        // keep the caret in the field
+        eye.on('mousedown', function (e) {
+            e.preventDefault();
+        }).on('click', function () {
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const direction = field.selectionDirection;
+            input.attr('type', field.type === 'password' ? 'text' : 'password');
+            field.setSelectionRange(start, end, direction);
+            update();
+        });
+    });
+}
+
+addPasswordShowUI.defaults = {
+    'title': 'Show password'
+};
+
 
 /**
  * setup form help buttons

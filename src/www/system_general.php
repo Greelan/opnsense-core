@@ -286,7 +286,6 @@ include("head.inc");
 
 <script src="<?= cache_safe('/ui/js/tokenize2.js') ?>"></script>
 <link rel="stylesheet" type="text/css" href="<?= cache_safe(get_themed_filename('/css/tokenize2.css')) ?>">
-<script src="<?= cache_safe('/ui/js/opnsense_ui.js') ?>"></script>
 <script>
 //<![CDATA[
 $( document ).ready(function() {

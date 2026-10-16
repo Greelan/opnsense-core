@@ -161,6 +161,7 @@
         $("#row_openvpn_export\\.p12_password > td:eq(1)").append(
             $("<input type='password' class='form-control password_field' size='50' id='openvpn_export.p12_password_confirm'/>")
         );
+        addPasswordShowUI($("#row_openvpn_export\\.p12_password"));
 
         $(".password_field").on("keyup", function(){
             if ($("#openvpn_export\\.p12_password").val() != $("#openvpn_export\\.p12_password_confirm").val()) {

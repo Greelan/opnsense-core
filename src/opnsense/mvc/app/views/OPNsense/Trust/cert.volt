@@ -112,11 +112,12 @@
                                 $("<label for='download_password'>{{ lang._('Password') }}</label>"),
                                 $password)
                             );
+                        addPasswordShowUI($container);
                         $type.change(function(){
                             if ($(this).val() != 'pkcs12') {
-                                $password.closest('div').hide();
+                                $password.closest('.form-group').hide();
                             } else {
-                                $password.closest('div').show();
+                                $password.closest('.form-group').show();
                             }
                         });
                         BootstrapDialog.show({
