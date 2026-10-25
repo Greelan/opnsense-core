@@ -73,4 +73,16 @@ class UpdateOnlyTextFieldTest extends Field_Framework_TestCase
         $this->assertEquals('********', $field->getDescription());
         $this->assertEquals('', (string)$field);
     }
+
+    /**
+     * applyDefault() removes a saved value
+     */
+    public function testApplyDefaultClears()
+    {
+        $field = new UpdateOnlyTextField();
+        $field->setValue('secret');
+        $field->applyDefault();
+        $this->assertEquals('', $field->getValue());
+        $this->assertTrue($field->isFieldChanged());
+    }
 }
