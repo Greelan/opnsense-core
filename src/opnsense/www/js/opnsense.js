@@ -115,6 +115,9 @@ function getFormData(parent) {
                     // strip leading '#' for backend compatibility
                     const val = sourceNode.val();
                     node[keypart] = val.startsWith("#") ? val.substring(1) : val;
+                } else if (sourceNode.data('clear-saved') === true && sourceNode.val() === '') {
+                    // saved write-only value marked for clearing, see UpdateOnlyTextField::setAllowClear()
+                    node[keypart] = false;
                 } else {
                     node[keypart] = sourceNode.val();
                 }
@@ -260,6 +263,7 @@ function setFormData(parent,data) {
                                 targetNode.data('form-placeholder', targetNode.attr('placeholder') ?? null);
                             }
                             targetNode.attr('placeholder', htmlDecode(node['%' + keypart]));
+                            setSavedValueClear(targetNode, true, false);
                         } else {
                             restorePlaceholder(targetNode);
                         }
@@ -272,7 +276,8 @@ function setFormData(parent,data) {
 }
 
 /**
- * put back the placeholder an input had before setFormData() set one from the data
+ * put back the placeholder an input had before setFormData() set one from the data,
+ * nothing saved to clear either
  * @param inputs input elements
  */
 function restorePlaceholder(inputs) {
@@ -280,7 +285,22 @@ function restorePlaceholder(inputs) {
         if ($(this).data('form-placeholder') !== undefined) {
             $(this).attr('placeholder', $(this).data('form-placeholder'));
         }
+        setSavedValueClear($(this), false, false);
     });
+}
+
+/**
+ * offer to clear a saved write-only value (fields with allowclear), see addSavedValueClearUI()
+ * @param input input element
+ * @param saved a value is saved
+ * @param clear clear on save, getFormData() then posts false
+ */
+function setSavedValueClear(input, saved, clear) {
+    const link = $('[id="clear-saved_' + input.attr('id') + '"]');
+    input.data('clear-saved', clear);
+    link.find('i').toggleClass('fa-times-circle', !clear).toggleClass('fa-check-circle', clear);
+    link.find('small').text(clear ? link.data('cancel-text') : link.data('clear-text'));
+    link.toggle(saved);
 }
 
 /**

@@ -77,4 +77,23 @@ class UpdateOnlyTextFieldTest extends Field_Framework_TestCase
         $this->assertEquals('********', $field->getDescription());
         $this->assertEquals(['password' => '', '%password' => '********'], $container->getNodes());
     }
+
+    /**
+     * false keeps a saved value, unless AllowClear is set, a required field then fails validation
+     */
+    public function testFalseClearsOnlyWithAllowClear()
+    {
+        $field = new UpdateOnlyTextField();
+        $field->setValue('secret');
+        $field->setValue(false);
+        $this->assertEquals('secret', $field->getValue());
+        $field->setAllowClear('Y');
+        $field->setValue('');
+        $this->assertEquals('secret', $field->getValue());
+        $field->setValue(false);
+        $this->assertEquals('', $field->getValue());
+        $this->assertTrue($field->isFieldChanged());
+        $field->setRequired('Y');
+        $this->assertNotEmpty($this->validate($field));
+    }
 }
