@@ -29,6 +29,6 @@
       <id>test.path</id>
       <label>Path</label>
       <type>text</type>
-      <help><![CDATA[Make sure the script is executable by the Monit service.]]></help>
+      <help><![CDATA[The absolute path to the program to execute, optionally followed by its arguments, e.g. <i>/usr/bin/logger -t monit "test failed"</i>. Quote an argument that contains spaces, but not the whole command. Make sure the program is executable by the Monit service.]]></help>
    </field>
 </form>

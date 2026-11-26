@@ -335,7 +335,7 @@
             <path type="StrictTextField">
                 <AllowSpaces>Y</AllowSpaces>
                 <Mask>/^(\/[^\/ ]*)+\/?.*$/</Mask>
-                <ValidationMessage>Should be a valid absolute file path.</ValidationMessage>
+                <ValidationMessage>Should be a valid absolute path to the executable, optionally followed by its arguments.</ValidationMessage>
             </path>
         </test>
     </items>
