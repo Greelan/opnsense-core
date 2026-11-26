@@ -333,6 +333,7 @@
                 </OptionValues>
             </action>
             <path type="StrictTextField">
+                <AllowSpaces>Y</AllowSpaces>
                 <Mask>/^(\/[^\/ ]*)+\/?.*$/</Mask>
                 <ValidationMessage>Should be a valid absolute file path.</ValidationMessage>
             </path>

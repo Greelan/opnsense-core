@@ -147,7 +147,10 @@ check {{ service.type }} {{ service.name }} {{ path }}
 {%       if test.condition is defined and test.action is defined %}
 {%        set epath = '' %}
 {%        if test.action == 'exec' and test.path|default('') != '' %}
-{%         set epath = test.path %}
+{%         set dquote = test.path.find('"') %}
+{%         set squote = test.path.find("'") %}
+{%         set quote = "'" if dquote > -1 and (squote == -1 or dquote < squote) else '"' %}
+{%         set epath = quote ~ test.path ~ quote %}
 {%        endif %}
    if {{ test.condition }} then {{ test.action }} {{ epath }}
 {%       endif %}
